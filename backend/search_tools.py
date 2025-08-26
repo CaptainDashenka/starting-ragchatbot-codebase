@@ -100,10 +100,25 @@ class CourseSearchTool(Tool):
                 header += f" - Lesson {lesson_num}"
             header += "]"
             
-            # Track source for the UI
-            source = course_title
+            # Track source for the UI with lesson link if available
             if lesson_num is not None:
-                source += f" - Lesson {lesson_num}"
+                source_text = f"{course_title} - Lesson {lesson_num}"
+                source_url = self.store.get_lesson_link(course_title, lesson_num)
+            else:
+                source_text = course_title
+                source_url = None
+            
+            # Store as dict with both text and URL - validate structure
+            source = {
+                'text': source_text,
+                'url': source_url
+            }
+            
+            # Validation: Ensure source has required properties
+            if not isinstance(source.get('text'), str) or not source['text'].strip():
+                print(f"Warning: Invalid source text for {course_title}, lesson {lesson_num}")
+                source['text'] = f"{course_title} - Lesson {lesson_num}" if lesson_num else course_title
+                
             sources.append(source)
             
             formatted.append(f"{header}\n{doc}")

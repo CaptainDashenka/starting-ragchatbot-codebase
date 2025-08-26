@@ -122,10 +122,42 @@ function addMessage(content, type, sources = null, isWelcome = false) {
     let html = `<div class="message-content">${displayContent}</div>`;
     
     if (sources && sources.length > 0) {
+        // Debug: Log sources to inspect their structure
+        console.log('Sources received:', sources);
+        
+        // Process sources to create clickable links
+        const sourceElements = sources.map((source, index) => {
+            if (typeof source === 'string') {
+                // Backwards compatibility with plain string sources - wrap in span for styling
+                return `<span>${source}</span>`;
+            } else if (source && typeof source === 'object') {
+                // Debug: Log problematic objects
+                console.log(`Source ${index}:`, source);
+                
+                // Handle object sources with better fallback
+                if (source.text) {
+                    // New format with text and optional URL
+                    if (source.url) {
+                        return `<a href="${source.url}" target="_blank" class="source-link">${source.text}</a>`;
+                    } else {
+                        return `<span>${source.text}</span>`;
+                    }
+                } else {
+                    // Object without text property - try to extract meaningful info
+                    console.warn(`Source object ${index} missing 'text' property:`, source);
+                    const fallbackText = source.title || source.name || `Source ${index + 1}`;
+                    return `<span>${fallbackText}</span>`;
+                }
+            }
+            // Fallback for non-string, non-object sources
+            console.warn(`Unexpected source type for ${index}:`, typeof source, source);
+            return `<span>Source ${index + 1}</span>`;
+        });
+        
         html += `
             <details class="sources-collapsible">
                 <summary class="sources-header">Sources</summary>
-                <div class="sources-content">${sources.join(', ')}</div>
+                <div class="sources-content">${sourceElements.join('')}</div>
             </details>
         `;
     }
